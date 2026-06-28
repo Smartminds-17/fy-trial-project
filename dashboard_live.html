@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proci - EF-03 Live Model Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="app-header">
+    <div class="brand-block">
+      <div class="brand-row">
+        <h1 class="logo">Proci</h1>
+        <!-- <span class="status-pill" id="model-status-pill">Live model dashboard</span> -->
+      </div>
+      <!-- <p class="app-subtitle">Tanzania inflation and USD/TZS forecasts from the project dataset and trained models.</p> -->
+    </div>
+    <div class="header-stats" aria-label="Model data summary">
+      <div class="header-stat">
+        <span>Model window</span>
+        <strong id="header-model-window">--</strong>
+      </div>
+      <div class="header-stat">
+        <span>Forecast targets</span>
+        <strong id="header-forecast-targets">--</strong>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Dashboard views">
+    <button type="button" class="tab active" data-tab="infl" onclick="showTab('infl')">Inflation</button>
+    <button type="button" class="tab" data-tab="fx" onclick="showTab('fx')">Exchange Rate</button>
+    <button type="button" class="tab" data-tab="indicators" onclick="showTab('indicators')">Indicators</button>
+    <button type="button" class="tab" data-tab="predict" onclick="showTab('predict')">Update &amp; Predict</button>
+    <button type="button" class="tab" data-tab="data" onclick="showTab('data')">Dataset</button>
+  </nav>
+
+  <div class="pane active" id="infl">
+    <div class="layout">
+      <div class="main-chart">
+        <div class="panel-note loading-note" id="loading-note">Loading latest predictions...</div>
+        <div class="head">
+          <div class="chart-heading">
+            <span class="chart-kicker">Inflation Forecast</span>
+            <div class="title" id="infl-title">Next-Month Inflation - Predicted vs Actual</div>
+            <p class="chart-subtitle">Monthly actual values compared with the model path.</p>
+          </div>
+          <div class="chart-toolbar">
+            <div class="legend">
+              <span><span class="dot blue"></span>Actual</span>
+              <span><span class="dot gold"></span><span id="infl-model-legend">Model Predicted</span></span>
+            </div>
+            <label class="year-control">
+              <span>Year</span>
+              <select id="infl-year-select"><option value="all">All</option></select>
+            </label>
+          </div>
+        </div>
+        <svg id="infl-chart" class="chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+        <div class="panel-note" id="infl-panel-note">Loading forecast chart...</div>
+      </div>
+
+      <div class="cards">
+        <div class="card blue">
+          <div class="label" id="infl-latest-label">Latest Inflation</div>
+          <div class="val" id="infl-latest">--</div>
+        </div>
+        <div class="card pred">
+          <div class="label" id="infl-pred-label">Predicted Next Month</div>
+          <div class="val" id="infl-pred-next">--</div>
+          <div class="ci" id="infl-ci">Loading interval...</div>
+        </div>
+        <div class="card gold">
+          <div class="label">Model RMSE (test)</div>
+          <div class="val" id="infl-rmse">--</div>
+          <div class="ci" id="infl-metrics-detail">Loading metrics...</div>
+        </div>
+        <div class="card blue">
+          <div class="label">BOT Policy Rate</div>
+          <div class="val" id="infl-policy-rate">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-grid">
+      <div class="panel viz-panel">
+        <div class="viz-head">
+          <span class="viz-kicker">Momentum</span>
+          <h3>Monthly Inflation Change</h3>
+          <p>Actual inflation movement in percentage points.</p>
+        </div>
+        <svg id="infl-change-chart" class="mini-chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+        <div class="panel-note" id="infl-change-note">Loading inflation change chart...</div>
+      </div>
+      <div class="panel viz-panel">
+        <div class="viz-head">
+          <span class="viz-kicker">Current Reading</span>
+          <h3>Inflation Gauge</h3>
+          <p>Latest observed inflation against a 0-10% reference band.</p>
+        </div>
+        <div class="gauge-wrap">
+          <svg id="infl-gauge" class="gauge-chart" viewBox="0 0 240 150" aria-hidden="true"></svg>
+          <div class="gauge-readout">
+            <strong id="infl-gauge-value">--</strong>
+            <span id="infl-gauge-status">Loading latest inflation...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" id="fx">
+    <div class="layout">
+      <div class="main-chart">
+        <div class="head">
+          <div class="chart-heading">
+            <span class="chart-kicker">Exchange Rate Forecast</span>
+            <div class="title" id="fx-title">Next-Month USD/TZS - Predicted vs Actual</div>
+            <p class="chart-subtitle">Monthly USD/TZS level against the fitted model output.</p>
+          </div>
+          <div class="chart-toolbar">
+            <div class="legend">
+              <span><span class="dot blue"></span>Actual</span>
+              <span><span class="dot gold"></span><span id="fx-model-legend">Model Predicted</span></span>
+            </div>
+            <label class="year-control">
+              <span>Year</span>
+              <select id="fx-year-select"><option value="all">All</option></select>
+            </label>
+          </div>
+        </div>
+        <svg id="fx-chart" class="chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+        <div class="panel-note" id="fx-panel-note">Loading FX forecast chart...</div>
+      </div>
+      <div class="cards">
+        <div class="card gold">
+          <div class="label" id="fx-latest-label">Latest Rate</div>
+          <div class="val" id="fx-latest">--</div>
+        </div>
+        <div class="card pred">
+          <div class="label" id="fx-pred-label">Predicted Next Month</div>
+          <div class="val" id="fx-pred-next">--</div>
+          <div class="ci" id="fx-ci">Loading interval...</div>
+        </div>
+        <div class="card blue">
+          <div class="label">Model RMSE (test)</div>
+          <div class="val" id="fx-rmse">--</div>
+          <div class="ci" id="fx-metrics-detail">Loading metrics...</div>
+        </div>
+        <div class="card blue">
+          <div class="label">Latest Brent Oil</div>
+          <div class="val" id="fx-brent">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-grid">
+      <div class="panel viz-panel">
+        <div class="viz-head">
+          <span class="viz-kicker">Momentum</span>
+          <h3>Exchange Rate Percentage Change</h3>
+          <p>Month-to-month USD/TZS movement from the actual series.</p>
+        </div>
+        <svg id="fx-change-chart" class="mini-chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+        <div class="panel-note" id="fx-change-note">Loading exchange-rate change chart...</div>
+      </div>
+      <div class="panel viz-panel">
+        <div class="viz-head">
+          <span class="viz-kicker">Relationship</span>
+          <h3>Exchange Rate vs Inflation</h3>
+          <p>Both series indexed to the first shared month for comparison.</p>
+        </div>
+        <div class="viz-legend">
+          <span><span class="legend-line blue-line"></span>USD/TZS index</span>
+          <span><span class="legend-line gold-line"></span>Inflation index</span>
+        </div>
+        <svg id="fx-inflation-chart" class="mini-chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+        <div class="panel-note" id="fx-inflation-note">Loading relationship chart...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" id="indicators">
+    <div class="workspace-panel indicators-panel">
+      <div class="section-head">
+        <div>
+          <h2>Supporting indicators</h2>
+          <p>Money supply, policy-rate, and commodity inputs from the same project dataset used by the model.</p>
+        </div>
+        <button type="button" class="secondary-button" onclick="loadIndicatorVisualizations(true)">Refresh Indicators</button>
+      </div>
+      <div class="indicator-cards">
+        <div class="mini-stat">
+          <span>Latest M2</span>
+          <strong id="indicator-m2-latest">--</strong>
+        </div>
+        <div class="mini-stat">
+          <span>M2 monthly change</span>
+          <strong id="indicator-m2-change">--</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Policy rate</span>
+          <strong id="indicator-policy-rate">--</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Brent oil</span>
+          <strong id="indicator-brent">--</strong>
+        </div>
+      </div>
+      <div class="insight-grid compact">
+        <div class="panel viz-panel">
+          <div class="viz-head">
+            <span class="viz-kicker">Liquidity</span>
+            <h3>Money Supply Growth</h3>
+            <p>Monthly M2 percentage change calculated from dataset rows.</p>
+          </div>
+          <svg id="m2-growth-chart" class="mini-chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+          <div class="panel-note" id="m2-growth-note">Loading M2 growth chart...</div>
+        </div>
+        <div class="panel viz-panel">
+          <div class="viz-head">
+            <span class="viz-kicker">Relationship</span>
+            <h3>Money Supply Growth vs Inflation</h3>
+            <p>M2 growth and inflation compared on the same percentage scale.</p>
+          </div>
+          <div class="viz-legend">
+            <span><span class="legend-line blue-line"></span>M2 growth</span>
+            <span><span class="legend-line gold-line"></span>Inflation</span>
+          </div>
+          <svg id="m2-inflation-chart" class="mini-chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+          <div class="panel-note" id="m2-inflation-note">Loading M2 relationship chart...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" id="predict">
+    <div class="workspace-panel update-panel">
+      <div class="section-head">
+        <div>
+          <h2>Update official data and predict</h2>
+          <p>Official-source refresh, model retraining, and next-month forecast generation in one run.</p>
+        </div>
+        <button type="button" class="primary-button" id="update-official-data">Update Data &amp; Predict</button>
+      </div>
+      <div class="source-grid">
+        <div class="source-card"><strong>Inflation</strong><span>BOT NCPI Annual Change workbook</span></div>
+        <div class="source-card"><strong>USD/TZS</strong><span>BOT official daily mean exchange rates</span></div>
+        <div class="source-card"><strong>Brent oil</strong><span>BOT World Commodity Prices workbook</span></div>
+        <div class="source-card"><strong>M2 and policy rate</strong><span>BOT Depository Survey and Interest Rates workbooks</span></div>
+      </div>
+      <div class="automation-status" id="automation-status">Checking the last official update...</div>
+      <div class="update-prediction-result" id="update-prediction-result" hidden>
+        <div class="update-result-head">
+          <div>
+            <span class="viz-kicker">Forecast ready</span>
+            <h3 id="update-result-title">Next-month prediction</h3>
+          </div>
+          <span id="update-result-run-label">Updated from official sources</span>
+        </div>
+        <div class="update-prediction-grid">
+          <div class="update-metric">
+            <span id="update-infl-label">Inflation</span>
+            <strong id="update-infl-value">--</strong>
+            <small id="update-infl-ci">95% CI: --</small>
+          </div>
+          <div class="update-metric">
+            <span id="update-fx-label">USD/TZS</span>
+            <strong id="update-fx-value">--</strong>
+            <small id="update-fx-ci">95% CI: --</small>
+          </div>
+        </div>
+        <div class="update-result-note" id="update-result-note"></div>
+      </div>
+      <div class="source-links" id="official-source-links"></div>
+    </div>
+  </div>
+
+  <div class="pane" id="data">
+    <div class="workspace-panel dataset-panel">
+      <div class="section-head">
+        <div>
+          <h2>Economic predictors dataset</h2>
+          <p id="dataset-summary">Project CSV rows will load here from the FastAPI dataset route.</p>
+        </div>
+        <div class="button-row">
+          <button type="button" class="secondary-button" onclick="loadDataset(true)">Refresh Data</button>
+          <a class="primary-button link-button" id="download-dataset-link" href="#" download>Download CSV</a>
+        </div>
+      </div>
+      <div class="dataset-table-wrap">
+        <table class="dataset-table">
+          <thead id="dataset-head"></thead>
+          <tbody id="dataset-body"><tr><td>Open this tab to load the dataset.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="dashboard-footer-note">Loading model summary...</div>
+</div>
+
+<script>
+const isServerBacked = ['http:', 'https:'].includes(window.location.protocol);
+const serverRequiredMessage = 'Open this dashboard from FastAPI, not a static HTML preview.';
+let fastApiHealthCheck = null;
+let datasetLoaded = false;
+let datasetPayloadCache = null;
+let indicatorsLoaded = false;
+
+function apiUrl(path) {
+  if (!isServerBacked) throw new Error(serverRequiredMessage);
+  return new URL(path, window.location.origin).href;
+}
+
+async function readJsonResponse(response, label) {
+  const rawBody = await response.text();
+  const trimmedBody = rawBody.trim();
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('text/html') || trimmedBody.startsWith('<')) {
+    throw new Error(`${label} returned HTML instead of JSON. ${serverRequiredMessage}`);
+  }
+  let data;
+  try {
+    data = JSON.parse(rawBody);
+  } catch {
+    throw new Error(`${label} returned invalid JSON.`);
+  }
+  if (!response.ok) throw new Error(data?.detail || `${label} failed with HTTP ${response.status}.`);
+  return data;
+}
+
+function apiErrorMessage(error, fallback) {
+  return error && typeof error.message === 'string' && error.message ? error.message : fallback;
+}
+
+async function ensureFastApiServer() {
+  if (!isServerBacked) throw new Error(serverRequiredMessage);
+  if (fastApiHealthCheck) return fastApiHealthCheck;
+  fastApiHealthCheck = (async () => {
+    const response = await fetch(apiUrl('/api/health'), { cache: 'no-store' });
+    const data = await readJsonResponse(response, 'FastAPI health check');
+    if (data?.status !== 'ok') throw new Error('FastAPI health check did not return status ok.');
+    return true;
+  })();
+  return fastApiHealthCheck;
+}
+
+async function fetchPredictionsPayload() {
+  await ensureFastApiServer();
+  const response = await fetch(apiUrl('/api/predictions'), { cache: 'no-store' });
+  return readJsonResponse(response, 'Predictions request');
+}
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function numericValue(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function formatPct(value, digits = 2) {
+  return Number.isFinite(Number(value)) ? `${Number(value).toFixed(digits)} %` : '--';
+}
+
+function formatTzs(value, digits = 0) {
+  return Number.isFinite(Number(value))
+    ? `Tsh ${Number(value).toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits })}`
+    : '--';
+}
+
+function formatUsd(value) {
+  return Number.isFinite(Number(value)) ? `$ ${Number(value).toFixed(2)}` : '--';
+}
+
+function formatMetricDetail(metrics) {
+  if (!metrics) return 'Metrics unavailable';
+  const mae = Number(metrics.mae);
+  const r2 = Number(metrics.r2);
+  const maeText = Number.isFinite(mae) ? `MAE ${mae.toFixed(2)}` : 'MAE --';
+  const r2Text = Number.isFinite(r2) ? `R2 ${r2.toFixed(3)}` : 'R2 --';
+  return `${maeText} | ${r2Text}`;
+}
+
+function formatCi(ci, formatter) {
+  if (!Array.isArray(ci) || ci.length !== 2) return '95% interval unavailable';
+  return `95% CI: ${formatter(ci[0])} to ${formatter(ci[1])}`;
+}
+
+function parseMonthLabel(month) {
+  if (typeof month !== 'string') return '';
+  const [year, rawMonth] = month.split('-');
+  const monthIndex = Number(rawMonth) - 1;
+  const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (!year || monthIndex < 0 || monthIndex > 11) return month;
+  return `${names[monthIndex]} ${year.slice(-2)}`;
+}
+
+function svgNode(tag, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([key, value]) => {
+    if (value != null) el.setAttribute(key, String(value));
+  });
+  return el;
+}
+
+function seriesFromArrays(months, values) {
+  return (months || [])
+    .map((month, index) => ({ month, value: numericValue(values?.[index]) }))
+    .filter(point => point.month && Number.isFinite(point.value));
+}
+
+function differenceSeries(series) {
+  const points = [];
+  for (let index = 1; index < series.length; index += 1) {
+    points.push({ month: series[index].month, value: series[index].value - series[index - 1].value });
+  }
+  return points;
+}
+
+function percentChangeSeries(series) {
+  const points = [];
+  for (let index = 1; index < series.length; index += 1) {
+    const previous = series[index - 1].value;
+    if (previous === 0) continue;
+    points.push({ month: series[index].month, value: ((series[index].value - previous) / previous) * 100 });
+  }
+  return points;
+}
+
+function alignSeriesByMonth(seriesA, seriesB) {
+  const bByMonth = new Map(seriesB.map(point => [point.month, point.value]));
+  const a = [];
+  const b = [];
+  seriesA.forEach(point => {
+    const bValue = bByMonth.get(point.month);
+    if (!Number.isFinite(point.value) || !Number.isFinite(bValue)) return;
+    a.push({ month: point.month, value: point.value });
+    b.push({ month: point.month, value: bValue });
+  });
+  return [a, b];
+}
+
+function latestFinitePoint(series) {
+  for (let index = series.length - 1; index >= 0; index -= 1) {
+    if (Number.isFinite(series[index].value)) return series[index];
+  }
+  return null;
+}
+
+function miniScale(values, bounds) {
+  const finite = values.filter(Number.isFinite);
+  if (!finite.length) return null;
+  let minValue = Math.min(...finite);
+  let maxValue = Math.max(...finite);
+  if (minValue === maxValue) {
+    const pad = Math.max(Math.abs(minValue) * .12, 1);
+    minValue -= pad;
+    maxValue += pad;
+  }
+  const span = maxValue - minValue;
+  const padding = span * .12;
+  const yMin = minValue - padding;
+  const yMax = maxValue + padding;
+  return {
+    min: yMin,
+    max: yMax,
+    yFor(value) {
+      const ratio = (value - yMin) / (yMax - yMin || 1);
+      return bounds.yBottom - ratio * (bounds.yBottom - bounds.yTop);
+    },
+  };
+}
+
+function drawFrame(svg, bounds, labels = []) {
+  svg.appendChild(svgNode('line', { class: 'mini-axis', x1: bounds.x0, y1: bounds.yBottom, x2: bounds.x1, y2: bounds.yBottom }));
+  svg.appendChild(svgNode('line', { class: 'mini-axis', x1: bounds.x0, y1: bounds.yTop, x2: bounds.x0, y2: bounds.yBottom }));
+  [0, .5, 1].forEach(position => {
+    const x = bounds.x0 + (bounds.x1 - bounds.x0) * position;
+    svg.appendChild(svgNode('line', { class: 'mini-grid-line', x1: x, y1: bounds.yTop, x2: x, y2: bounds.yBottom }));
+  });
+  labels.forEach(label => {
+    const text = svgNode('text', { class: 'mini-label', x: label.x, y: label.y, 'text-anchor': label.anchor || 'middle' });
+    text.textContent = label.text;
+    svg.appendChild(text);
+  });
+}
+
+function pathFromSeries(points, bounds, scale) {
+  const denominator = Math.max(points.length - 1, 1);
+  return points.map((point, index) => {
+    const x = bounds.x0 + (bounds.x1 - bounds.x0) * (index / denominator);
+    return `${x},${scale.yFor(point.value)}`;
+  }).join(' ');
+}
+
+function indexSeries(points) {
+  const base = points.find(point => Number.isFinite(point.value) && point.value !== 0)?.value;
+  if (!Number.isFinite(base)) return [];
+  return points.map(point => ({ month: point.month, value: Number.isFinite(point.value) ? (point.value / base) * 100 : NaN }));
+}
+
+function ensureLineChartTooltip(svgId) {
+  const svg = document.getElementById(svgId);
+  const chart = svg?.closest('.main-chart');
+  if (!svg || !chart) return null;
+  let layer = document.getElementById(`${svgId}-hover-layer`);
+  if (!layer) {
+    layer = svgNode('g', { id: `${svgId}-hover-layer` });
+    svg.appendChild(layer);
+  }
+  let tooltip = document.getElementById(`${svgId}-tooltip`);
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = `${svgId}-tooltip`;
+    tooltip.className = 'chart-tooltip';
+    chart.appendChild(tooltip);
+  }
+  return { svg, chart, layer, tooltip };
+}
+
+function hideLineChartTooltip(svgId) {
+  const tooltip = document.getElementById(`${svgId}-tooltip`);
+  const line = document.getElementById(`${svgId}-hover-line`);
+  if (tooltip) tooltip.classList.remove('visible');
+  if (line) line.setAttribute('visibility', 'hidden');
+}
+
+function lineChartTooltipPosition(context, event) {
+  const chartRect = context.chart.getBoundingClientRect();
+  const px = event.clientX - chartRect.left;
+  const py = event.clientY - chartRect.top - 8;
+  return {
+    left: Math.max(82, Math.min(px, chartRect.width - 82)),
+    top: Math.max(18, py),
+  };
+}
+
+function renderLineChartHover(svgId, bounds, points, options = {}) {
+  const context = ensureLineChartTooltip(svgId);
+  if (!context) return;
+  context.layer.innerHTML = '';
+  const line = svgNode('line', {
+    id: `${svgId}-hover-line`,
+    class: 'chart-hover-line',
+    y1: bounds.yTop,
+    y2: bounds.yBottom,
+    visibility: 'hidden',
+  });
+  context.layer.appendChild(line);
+  const slot = (bounds.x1 - bounds.x0) / Math.max(points.length - 1, 1);
+  const hitWidth = points.length > 1 ? Math.max(18, slot) : bounds.x1 - bounds.x0;
+  points.forEach(point => {
+    const hit = svgNode('rect', {
+      class: 'chart-hit-target',
+      x: Math.max(bounds.x0, point.x - hitWidth / 2),
+      y: bounds.yTop,
+      width: Math.min(hitWidth, bounds.x1 - bounds.x0),
+      height: bounds.yBottom - bounds.yTop,
+      fill: 'none',
+      stroke: 'none',
+      'pointer-events': 'all',
+    });
+    const showTooltip = event => {
+      line.setAttribute('x1', String(point.x));
+      line.setAttribute('x2', String(point.x));
+      line.setAttribute('visibility', 'visible');
+      context.tooltip.innerHTML = `
+        <div class="month">${point.monthLabel}</div>
+        <div class="row"><span><span class="swatch actual"></span>${options.actualLabel || 'Actual'}</span><strong>${options.format(point.actual)}</strong></div>
+        <div class="row"><span><span class="swatch predicted"></span>${options.predictedLabel || 'Model'}</span><strong>${options.format(point.predicted)}</strong></div>
+      `;
+      const position = lineChartTooltipPosition(context, event);
+      context.tooltip.style.left = `${position.left}px`;
+      context.tooltip.style.top = `${position.top}px`;
+      context.tooltip.classList.add('visible');
+    };
+    hit.addEventListener('mouseenter', showTooltip);
+    hit.addEventListener('mousemove', showTooltip);
+    hit.addEventListener('mouseleave', () => hideLineChartTooltip(svgId));
+    context.layer.appendChild(hit);
+  });
+}
+
+function renderMainLineChart(svgId, noteId, months, actualValues, predictedValues, options = {}) {
+  const svg = document.getElementById(svgId);
+  const note = document.getElementById(noteId);
+  if (!svg) return;
+  svg.replaceChildren();
+  const actual = seriesFromArrays(months, actualValues);
+  const predicted = seriesFromArrays(months, predictedValues);
+  const [a, p] = alignSeriesByMonth(actual, predicted);
+  if (!a.length || !p.length) {
+    if (note) note.textContent = options.emptyText || 'No chart data available.';
+    return;
+  }
+  const bounds = { x0: 44, x1: 625, yTop: 24, yBottom: 178 };
+  const scale = miniScale([...a.map(point => point.value), ...p.map(point => point.value)], bounds);
+  if (!scale) return;
+  const format = options.format || (value => value.toFixed(1));
+  drawFrame(svg, bounds, [
+    { x: 8, y: bounds.yTop + 4, text: format(scale.max), anchor: 'start' },
+    { x: 8, y: bounds.yBottom + 4, text: format(scale.min), anchor: 'start' },
+    { x: bounds.x0, y: 208, text: parseMonthLabel(a[0].month) },
+    { x: bounds.x1, y: 208, text: parseMonthLabel(a[a.length - 1].month) },
+  ]);
+  svg.appendChild(svgNode('polyline', { class: 'mini-line-blue', points: pathFromSeries(a, bounds, scale) }));
+  svg.appendChild(svgNode('polyline', { class: 'mini-line-gold', points: pathFromSeries(p, bounds, scale) }));
+  const denominator = Math.max(a.length - 1, 1);
+  const hoverPoints = a.map((point, index) => {
+    const predictedPoint = p[index];
+    const x = bounds.x0 + (bounds.x1 - bounds.x0) * (index / denominator);
+    return {
+      x,
+      actual: point.value,
+      predicted: predictedPoint.value,
+      monthLabel: parseMonthLabel(point.month),
+    };
+  });
+  renderLineChartHover(svgId, bounds, hoverPoints, { format });
+  if (note) {
+    const lastActual = a[a.length - 1];
+    const lastPred = p[p.length - 1];
+    note.textContent = `Showing ${a.length} monthly points through ${parseMonthLabel(lastActual.month)}. Actual: ${format(lastActual.value)}, model: ${format(lastPred.value)}.`;
+  }
+}
+
+function renderMiniBarChart(svgId, noteId, rows, options = {}) {
+  const svg = document.getElementById(svgId);
+  const note = document.getElementById(noteId);
+  if (!svg) return;
+  svg.replaceChildren();
+  const points = (rows || []).filter(point => Number.isFinite(point.value));
+  if (!points.length) {
+    if (note) note.textContent = options.emptyText || 'No chart data available.';
+    return;
+  }
+  const bounds = { x0: 44, x1: 625, yTop: 26, yBottom: 178 };
+  const scale = miniScale([...points.map(point => point.value), 0], bounds);
+  if (!scale) return;
+  const format = options.format || (value => value.toFixed(1));
+  drawFrame(svg, bounds, [
+    { x: 8, y: bounds.yTop + 4, text: format(scale.max), anchor: 'start' },
+    { x: 8, y: bounds.yBottom + 4, text: format(scale.min), anchor: 'start' },
+    { x: bounds.x0, y: 208, text: parseMonthLabel(points[0].month) },
+    { x: bounds.x1, y: 208, text: parseMonthLabel(points[points.length - 1].month) },
+  ]);
+  const yZero = scale.yFor(0);
+  svg.appendChild(svgNode('line', { class: 'mini-axis', x1: bounds.x0, y1: yZero, x2: bounds.x1, y2: yZero }));
+  const slot = (bounds.x1 - bounds.x0) / points.length;
+  const width = Math.max(3, Math.min(22, slot * .62));
+  points.forEach((point, index) => {
+    const x = bounds.x0 + slot * index + (slot - width) / 2;
+    const yValue = scale.yFor(point.value);
+    svg.appendChild(svgNode('rect', {
+      class: point.value >= 0 ? 'mini-bar-positive' : 'mini-bar-negative',
+      x,
+      y: Math.min(yValue, yZero),
+      width,
+      height: Math.max(1, Math.abs(yZero - yValue)),
+      rx: 3,
+    }));
+  });
+  const last = points[points.length - 1];
+  if (note) note.textContent = `${options.notePrefix || 'Latest movement'}: ${format(last.value)} in ${parseMonthLabel(last.month)}.`;
+}
+
+function renderDualLineChart(svgId, noteId, seriesA, seriesB, options = {}) {
+  const svg = document.getElementById(svgId);
+  const note = document.getElementById(noteId);
+  if (!svg) return;
+  svg.replaceChildren();
+  let a = (seriesA || []).filter(point => Number.isFinite(point.value));
+  let b = (seriesB || []).filter(point => Number.isFinite(point.value));
+  if (options.indexed) {
+    a = indexSeries(a);
+    b = indexSeries(b);
+  }
+  if (!a.length || !b.length) {
+    if (note) note.textContent = options.emptyText || 'No relationship data available.';
+    return;
+  }
+  const bounds = { x0: 44, x1: 625, yTop: 26, yBottom: 178 };
+  const scale = miniScale([...a.map(point => point.value), ...b.map(point => point.value)], bounds);
+  if (!scale) return;
+  const format = options.format || (value => value.toFixed(1));
+  drawFrame(svg, bounds, [
+    { x: 8, y: bounds.yTop + 4, text: format(scale.max), anchor: 'start' },
+    { x: 8, y: bounds.yBottom + 4, text: format(scale.min), anchor: 'start' },
+    { x: bounds.x0, y: 208, text: parseMonthLabel(a[0].month) },
+    { x: bounds.x1, y: 208, text: parseMonthLabel(a[a.length - 1].month) },
+  ]);
+  svg.appendChild(svgNode('polyline', { class: 'mini-line-blue', points: pathFromSeries(a, bounds, scale) }));
+  svg.appendChild(svgNode('polyline', { class: 'mini-line-gold', points: pathFromSeries(b, bounds, scale) }));
+  const lastA = a[a.length - 1];
+  const lastB = b[b.length - 1];
+  if (note) note.textContent = `${options.labelA || 'Series A'}: ${format(lastA.value)}; ${options.labelB || 'Series B'}: ${format(lastB.value)} in ${parseMonthLabel(lastA.month)}.`;
+}
+
+function polarPoint(cx, cy, r, angleDeg) {
+  const angle = (angleDeg - 180) * Math.PI / 180;
+  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+}
+
+function arcPath(cx, cy, r, startAngle, endAngle) {
+  const start = polarPoint(cx, cy, r, startAngle);
+  const end = polarPoint(cx, cy, r, endAngle);
+  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+}
+
+function renderInflationGauge(value) {
+  const svg = document.getElementById('infl-gauge');
+  if (!svg) return;
+  svg.replaceChildren();
+  const numeric = Math.max(0, Math.min(10, Number(value) || 0));
+  const cx = 120;
+  const cy = 118;
+  const r = 82;
+  [[0, 5, 'var(--green)'], [5, 7, 'var(--amber)'], [7, 10, 'var(--rose)']].forEach(([from, to, color]) => {
+    svg.appendChild(svgNode('path', {
+      d: arcPath(cx, cy, r, (from / 10) * 180, (to / 10) * 180),
+      fill: 'none',
+      stroke: color,
+      'stroke-linecap': 'round',
+      'stroke-width': 15,
+    }));
+  });
+  const needle = polarPoint(cx, cy, r - 16, (numeric / 10) * 180);
+  svg.appendChild(svgNode('line', { x1: cx, y1: cy, x2: needle.x, y2: needle.y, stroke: 'var(--navy)', 'stroke-linecap': 'round', 'stroke-width': 3 }));
+  svg.appendChild(svgNode('circle', { cx, cy, r: 5, fill: 'var(--navy)' }));
+  ['0%', '10%'].forEach((label, index) => {
+    const text = svgNode('text', { class: 'mini-label', x: index ? 210 : 30, y: 132, 'text-anchor': 'middle' });
+    text.textContent = label;
+    svg.appendChild(text);
+  });
+  setText('infl-gauge-value', `${Number(value).toFixed(2)}%`);
+  const status = numeric < 5 ? 'Within the lower reference band.' : numeric < 7 ? 'In the watch band.' : 'In the elevated band.';
+  setText('infl-gauge-status', status);
+}
+
+function populateYearSelect(selectId, months, onChange) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  const currentValue = select.value || 'all';
+  const years = [...new Set((months || []).map(month => String(month).slice(0, 4)).filter(Boolean))].sort();
+  select.replaceChildren(new Option('All', 'all'));
+  years.forEach(year => select.appendChild(new Option(year, year)));
+  select.value = years.includes(currentValue) ? currentValue : 'all';
+  select.onchange = onChange;
+}
+
+function filteredIndices(months, selectId) {
+  const year = document.getElementById(selectId)?.value || 'all';
+  return (months || [])
+    .map((month, index) => ({ month, index }))
+    .filter(item => item.month && (year === 'all' || String(item.month).slice(0, 4) === year))
+    .map(item => item.index);
+}
+
+function pickValues(values, indices) {
+  return indices.map(index => values[index]);
+}
+
+function pickMonths(months, indices) {
+  return indices.map(index => months[index]);
+}
+
+function renderPredictionCharts(data) {
+  const inflMonths = data.infl?.history_months || [];
+  const inflActual = data.infl?.history_actual || [];
+  const inflPred = data.infl?.history_predicted || [];
+  const fxMonths = data.fx?.history_months || [];
+  const fxActual = data.fx?.history_actual_level || [];
+  const fxPred = data.fx?.history_predicted_level || [];
+  const drawInfl = () => {
+    const indices = filteredIndices(inflMonths, 'infl-year-select');
+    renderMainLineChart('infl-chart', 'infl-panel-note', pickMonths(inflMonths, indices), pickValues(inflActual, indices), pickValues(inflPred, indices), {
+      format: value => `${Number(value).toFixed(2)}%`,
+      emptyText: 'No inflation chart data available for this selection.',
+    });
+  };
+  const drawFx = () => {
+    const indices = filteredIndices(fxMonths, 'fx-year-select');
+    renderMainLineChart('fx-chart', 'fx-panel-note', pickMonths(fxMonths, indices), pickValues(fxActual, indices), pickValues(fxPred, indices), {
+      format: value => Number(value).toFixed(0),
+      emptyText: 'No exchange-rate chart data available for this selection.',
+    });
+  };
+  populateYearSelect('infl-year-select', inflMonths, drawInfl);
+  populateYearSelect('fx-year-select', fxMonths, drawFx);
+  drawInfl();
+  drawFx();
+  const inflationSeries = seriesFromArrays(inflMonths, inflActual);
+  const fxSeries = seriesFromArrays(fxMonths, fxActual);
+  const [indexedFxSeries, indexedInflationSeries] = alignSeriesByMonth(fxSeries, inflationSeries);
+  renderMiniBarChart('infl-change-chart', 'infl-change-note', differenceSeries(inflationSeries), {
+    format: value => `${value.toFixed(2)} pp`,
+    notePrefix: 'Latest inflation change',
+    emptyText: 'No inflation change data available.',
+  });
+  renderMiniBarChart('fx-change-chart', 'fx-change-note', percentChangeSeries(fxSeries), {
+    format: value => `${value.toFixed(2)}%`,
+    notePrefix: 'Latest exchange-rate change',
+    emptyText: 'No exchange-rate change data available.',
+  });
+  renderDualLineChart('fx-inflation-chart', 'fx-inflation-note', indexedFxSeries, indexedInflationSeries, {
+    labelA: 'USD/TZS index',
+    labelB: 'Inflation index',
+    format: value => value.toFixed(1),
+    indexed: true,
+    emptyText: 'No shared exchange-rate and inflation data available.',
+  });
+}
+
+function renderOfficialSourceLinks(sources) {
+  const container = document.getElementById('official-source-links');
+  if (!container) return;
+  container.replaceChildren();
+  [...new Set(Object.values(sources || {}))].forEach((url, index) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = `Official source ${index + 1}`;
+    container.appendChild(link);
+  });
+}
+
+function renderUpdatePredictionResult(predictions, updateAudit) {
+  const container = document.getElementById('update-prediction-result');
+  if (!container || !predictions?.data) return;
+  const latestMonth = predictions.data.latest_month || updateAudit?.latest_official_common_month || 'latest month';
+  const nextMonth = predictions.data.next_month || 'next month';
+  const rowsAdded = Number(updateAudit?.rows_added || 0);
+  const runLabel = rowsAdded
+    ? `${rowsAdded} row${rowsAdded === 1 ? '' : 's'} added`
+    : 'Dataset already current';
+
+  setText('update-result-title', `${nextMonth} prediction`);
+  setText('update-result-run-label', runLabel);
+  setText('update-infl-label', 'Inflation forecast');
+  setText('update-infl-value', formatPct(predictions.infl?.pred_next_inflation, 2));
+  setText('update-infl-ci', `95% CI: ${formatCi(predictions.infl?.pred_ci_95, value => `${Number(value).toFixed(2)}%`)}`);
+  setText('update-fx-label', 'USD/TZS forecast');
+  setText('update-fx-value', formatTzs(predictions.fx?.pred_next_usdtzs_level, 0));
+  setText('update-fx-ci', `95% CI: ${formatCi(predictions.fx?.pred_ci_95, value => formatTzs(value, 0).replace('Tsh ', ''))}`);
+  setText('update-result-note', `Generated after official-source refresh using data through ${latestMonth}.`);
+  container.hidden = false;
+}
+
+async function loadSourceStatus() {
+  const status = document.getElementById('automation-status');
+  try {
+    await ensureFastApiServer();
+    const response = await fetch(apiUrl('/api/data-sources'), { cache: 'no-store' });
+    const data = await readJsonResponse(response, 'Data-source status request');
+    renderOfficialSourceLinks(data.sources);
+    if (data.status === 'not_run') {
+      if (status) status.textContent = data.message;
+      return;
+    }
+    const added = Number(data.rows_added || 0);
+    const collectedAt = data.collected_at ? new Date(data.collected_at).toLocaleString() : 'unknown time';
+    if (status) status.textContent = `Last update: ${collectedAt}. Latest complete official month: ${data.latest_official_common_month}. ${added} row${added === 1 ? '' : 's'} added during that run.`;
+  } catch (error) {
+    if (status) status.textContent = apiErrorMessage(error, 'Unable to load source status.');
+  }
+}
+
+async function updateOfficialData() {
+  const button = document.getElementById('update-official-data');
+  const status = document.getElementById('automation-status');
+  const predictionResult = document.getElementById('update-prediction-result');
+  try {
+    await ensureFastApiServer();
+    if (button) button.disabled = true;
+    if (predictionResult) predictionResult.hidden = true;
+    if (status) status.textContent = 'Collecting official spreadsheets and exchange rates. This can take about one minute...';
+    const response = await fetch(apiUrl('/api/update-data'), { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    const data = await readJsonResponse(response, 'Official data update');
+    renderOfficialSourceLinks(data.sources);
+    const added = Number(data.rows_added || 0);
+    if (status) {
+      status.textContent = added
+        ? `Update complete: ${added} monthly rows added through ${data.latest_official_common_month}. Models retrained and forecast refreshed.`
+        : `Already current through ${data.latest_official_common_month}. Models retrained and forecast refreshed.`;
+    }
+    datasetLoaded = false;
+    indicatorsLoaded = false;
+    datasetPayloadCache = null;
+    const predictions = await loadPredictions();
+    if (predictions) renderUpdatePredictionResult(predictions, data);
+  } catch (error) {
+    if (status) status.textContent = apiErrorMessage(error, 'Official data update failed.');
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function loadPredictions() {
+  const loading = document.getElementById('loading-note');
+  try {
+    if (loading) {
+      loading.classList.remove('error-note');
+      loading.textContent = 'Loading latest predictions...';
+      loading.style.display = 'block';
+    }
+    const data = await fetchPredictionsPayload();
+    const latestMonth = data?.data?.latest_month || '';
+    const nextMonth = data?.data?.next_month || '';
+    const modelStartYear = data?.data?.model_start ? `20${String(data.data.model_start).slice(-2)}` : '';
+    const modelEndYear = data?.data?.model_end ? `20${String(data.data.model_end).slice(-2)}` : '';
+    const modelWindow = modelStartYear && modelEndYear ? `${modelStartYear}-${modelEndYear}` : data?.data?.model_end || '2018-2024';
+    const trainPeriod = data?.data?.train_period || 'the first 80% of 2018-2024';
+    const testPeriod = data?.data?.test_period || 'the last 20% of 2018-2024';
+    const liveStart = data?.data?.live_start || 'Jan-25';
+    setText('header-model-window', modelWindow || '--');
+    setText('header-forecast-targets', 'Inflation + USD/TZS');
+    setText('model-status-pill', `${data?.data?.input_csv || 'Project CSV'} connected`);
+    setText('dashboard-footer-note', `Data: ${data?.data?.input_csv || 'project CSV'}, through ${latestMonth || 'latest month'}. Train target months: ${trainPeriod}; test target months: ${testPeriod}. ${liveStart} onward is live collected data for prediction inputs. Next-month forecasts use the saved app models for inflation and USD/TZS.`);
+    if (data?.infl) {
+      setText('infl-model-legend', 'Model Predicted');
+      setText('infl-title', 'Next-Month Inflation - Predicted vs Actual');
+      setText('infl-latest-label', `Latest Inflation${latestMonth ? ` (${latestMonth})` : ''}`);
+      setText('infl-pred-label', `Predicted Next Month${nextMonth ? ` (${nextMonth})` : ''}`);
+      setText('infl-latest', formatPct(data.infl.latest_inflation, 2));
+      setText('infl-pred-next', formatPct(data.infl.pred_next_inflation, 2));
+      setText('infl-ci', formatCi(data.infl.pred_ci_95, value => `${Number(value).toFixed(2)}%`));
+      setText('infl-rmse', Number.isFinite(Number(data.infl.metrics?.rmse)) ? `${Number(data.infl.metrics.rmse).toFixed(2)} pp` : '--');
+      setText('infl-metrics-detail', formatMetricDetail(data.infl.metrics));
+      setText('infl-policy-rate', formatPct(data.infl.bot_policy_rate_pct, 1));
+      if (data.infl.latest_inflation != null) renderInflationGauge(data.infl.latest_inflation);
+    }
+    if (data?.fx) {
+      setText('fx-model-legend', 'Model Predicted');
+      setText('fx-title', 'Next-Month USD/TZS - Predicted vs Actual');
+      setText('fx-latest-label', `Latest Rate${latestMonth ? ` (${latestMonth})` : ''}`);
+      setText('fx-pred-label', `Predicted Next Month${nextMonth ? ` (${nextMonth})` : ''}`);
+      setText('fx-latest', formatTzs(data.fx.latest_usdtzs_level, 0));
+      setText('fx-pred-next', formatTzs(data.fx.pred_next_usdtzs_level, 0));
+      setText('fx-ci', formatCi(data.fx.pred_ci_95, value => formatTzs(value, 0).replace('Tsh ', '')));
+      setText('fx-rmse', Number.isFinite(Number(data.fx.metrics?.rmse)) ? `${Number(data.fx.metrics.rmse).toFixed(1)} TZS` : '--');
+      setText('fx-metrics-detail', formatMetricDetail(data.fx.metrics));
+      setText('fx-brent', formatUsd(data.fx.latest_brent_oil_usd));
+    }
+    renderPredictionCharts(data);
+    return data;
+  } catch (error) {
+    const message = apiErrorMessage(error, 'Failed to load prediction data.');
+    if (loading) {
+      loading.textContent = message;
+      loading.classList.add('error-note');
+      loading.style.display = 'block';
+    }
+    setText('dashboard-footer-note', message);
+    return null;
+  } finally {
+    if (loading && !loading.classList.contains('error-note')) loading.style.display = 'none';
+  }
+}
+
+async function loadDataset(force = false) {
+  if (datasetLoaded && !force && datasetPayloadCache) return datasetPayloadCache;
+  const summary = document.getElementById('dataset-summary');
+  const head = document.getElementById('dataset-head');
+  const body = document.getElementById('dataset-body');
+  try {
+    await ensureFastApiServer();
+    if (summary) summary.textContent = 'Loading dataset...';
+    const response = await fetch(apiUrl('/api/dataset?limit=500'), { cache: 'no-store' });
+    const data = await readJsonResponse(response, 'Dataset request');
+    datasetPayloadCache = data;
+    if (head && body) {
+      head.innerHTML = '';
+      body.innerHTML = '';
+      const headerRow = document.createElement('tr');
+      data.columns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column;
+        headerRow.appendChild(th);
+      });
+      head.appendChild(headerRow);
+      data.rows.forEach(row => {
+        const tr = document.createElement('tr');
+        data.columns.forEach(column => {
+          const td = document.createElement('td');
+          const value = row[column];
+          td.textContent = value == null ? '' : String(value);
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+    }
+    if (summary) summary.textContent = `${data.source}: ${data.total_rows} monthly rows and ${data.columns.length} columns.`;
+    datasetLoaded = true;
+    return data;
+  } catch (error) {
+    const message = apiErrorMessage(error, 'Unable to load dataset.');
+    if (head) head.innerHTML = '';
+    if (body) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.textContent = message;
+      row.appendChild(cell);
+      body.replaceChildren(row);
+    }
+    if (summary) summary.textContent = message;
+    return null;
+  }
+}
+
+function datasetRowsToSeries(rows, column) {
+  return (rows || [])
+    .map(row => ({ month: row.month, value: numericValue(row[column]) }))
+    .filter(point => point.month && Number.isFinite(point.value))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+}
+
+async function loadIndicatorVisualizations(force = false) {
+  if (indicatorsLoaded && !force) return;
+  const payload = await loadDataset(force);
+  if (!payload?.rows?.length) return;
+  const m2Series = datasetRowsToSeries(payload.rows, 'm2_bn_tzs');
+  const inflationSeries = datasetRowsToSeries(payload.rows, 'inflation_pct');
+  const policySeries = datasetRowsToSeries(payload.rows, 'bot_policy_rate_pct');
+  const brentSeries = datasetRowsToSeries(payload.rows, 'brent_oil_usd');
+  const m2Growth = percentChangeSeries(m2Series);
+  const [alignedM2Growth, alignedInflation] = alignSeriesByMonth(m2Growth, inflationSeries);
+  const latestM2 = latestFinitePoint(m2Series);
+  const latestM2Growth = latestFinitePoint(m2Growth);
+  const latestPolicy = latestFinitePoint(policySeries);
+  const latestBrent = latestFinitePoint(brentSeries);
+  setText('indicator-m2-latest', latestM2 ? `Tsh ${(latestM2.value / 1000).toFixed(2)}T` : '--');
+  setText('indicator-m2-change', latestM2Growth ? formatPct(latestM2Growth.value, 2) : '--');
+  setText('indicator-policy-rate', latestPolicy ? formatPct(latestPolicy.value, 1) : '--');
+  setText('indicator-brent', latestBrent ? formatUsd(latestBrent.value) : '--');
+  renderMiniBarChart('m2-growth-chart', 'm2-growth-note', m2Growth, {
+    format: value => `${value.toFixed(1)}%`,
+    notePrefix: 'Latest M2 growth',
+    emptyText: 'No M2 growth data available.',
+  });
+  renderDualLineChart('m2-inflation-chart', 'm2-inflation-note', alignedM2Growth, alignedInflation, {
+    labelA: 'M2 growth',
+    labelB: 'Inflation',
+    format: value => `${value.toFixed(1)}%`,
+    emptyText: 'No shared M2 and inflation data available.',
+  });
+  indicatorsLoaded = true;
+}
+
+function showTab(id) {
+  document.querySelectorAll('.pane').forEach(pane => pane.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  const pane = document.getElementById(id);
+  if (!pane) return;
+  pane.classList.add('active');
+  document.querySelectorAll('.tab').forEach(tab => {
+    if (tab.dataset.tab === id) tab.classList.add('active');
+  });
+  if (id === 'data') loadDataset();
+  if (id === 'indicators') loadIndicatorVisualizations();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadPredictions();
+  loadSourceStatus();
+  const updateButton = document.getElementById('update-official-data');
+  const downloadLink = document.getElementById('download-dataset-link');
+  if (updateButton) updateButton.addEventListener('click', updateOfficialData);
+  if (downloadLink) {
+    if (isServerBacked) {
+      downloadLink.href = apiUrl('/dataset.csv');
+    } else {
+      downloadLink.removeAttribute('href');
+      downloadLink.removeAttribute('download');
+      downloadLink.setAttribute('aria-disabled', 'true');
+      downloadLink.title = serverRequiredMessage;
+    }
+  }
+  if (window.location.pathname === '/dataset') showTab('data');
+  if (window.location.pathname === '/predict') showTab('predict');
+});
+</script>
+</body>
+</html>

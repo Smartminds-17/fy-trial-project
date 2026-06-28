@@ -1,0 +1,16 @@
+{
+  "collected_at": "2026-06-28T13:06:55.632007+03:00",
+  "status": "up_to_date",
+  "rows_added": 0,
+  "months_added": [],
+  "models_retrained": true,
+  "prediction_refreshed": true,
+  "latest_official_common_month": "May-26",
+  "sources": {
+    "bot_policy_rate_pct": "https://www.bot.go.tz/Publications/Economic Statistics/Monthly/en/2026062416230136.xlsx",
+    "m2_bn_tzs": "https://www.bot.go.tz/Publications/Economic Statistics/Monthly/en/2026062416235039.xlsx",
+    "inflation_pct": "https://www.bot.go.tz/Publications/Economic Statistics/Monthly/en/2026062416255130.xlsx",
+    "brent_oil_usd": "https://www.bot.go.tz/Publications/Economic Statistics/Monthly/en/2026062416213060.xlsx",
+    "usd_tzs_rate": "https://www.bot.go.tz/ExchangeRate/previous_rates"
+  }
+}
