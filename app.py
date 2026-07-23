@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
+# import playwright
 
 from data_crawler import source_status, update_dataset_and_models
 from project_config import PROJECT_ROOT
