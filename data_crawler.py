@@ -21,10 +21,9 @@ import requests
 from bs4 import BeautifulSoup
 from openpyxl import load_workbook
 
-from project_config import INPUT_CSV, PROJECT_ROOT
+from project_config import INPUT_CSV, SOURCE_LOG_PATH
 
 DATASET_PATH = INPUT_CSV
-SOURCE_LOG_PATH = PROJECT_ROOT / "data_sources.json"
 
 BOT_ROOT = "https://www.bot.go.tz"
 BOT_MONTHLY_STATS_URL = f"{BOT_ROOT}/Publications/Filter/13"

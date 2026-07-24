@@ -1,9 +1,9 @@
-fastapi
-uvicorn[standard]
-pandas
+fastapi==0.139.0
+uvicorn[standard]==0.49.0
+pandas==3.0.2
 scikit-learn==1.8.0
-joblib
-numpy
-requests
-beautifulsoup4
-openpyxl
+joblib==1.5.3
+numpy==2.4.4
+requests==2.33.1
+beautifulsoup4==4.14.3
+openpyxl==3.1.5

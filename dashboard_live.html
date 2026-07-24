@@ -885,7 +885,15 @@ async function updateOfficialData() {
     if (button) button.disabled = true;
     if (predictionResult) predictionResult.hidden = true;
     if (status) status.textContent = 'Collecting official spreadsheets and exchange rates. This can take about one minute...';
-    const response = await fetch(apiUrl('/api/update-data'), { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    let response = await fetch(apiUrl('/api/update-data'), { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    if (response.status === 401) {
+      const token = window.prompt('Enter the private data-update token:');
+      if (!token) throw new Error('Official data update cancelled.');
+      response = await fetch(apiUrl('/api/update-data'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Update-Token': token }
+      });
+    }
     const data = await readJsonResponse(response, 'Official data update');
     renderOfficialSourceLinks(data.sources);
     const added = Number(data.rows_added || 0);

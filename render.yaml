@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: fy-forecast-dashboard
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATA_DIR
+        value: /var/data/fy-dashboard
+      - key: UPDATE_API_TOKEN
+        generateValue: true
+    disk:
+      name: forecast-data
+      mountPath: /var/data
+      sizeGB: 1

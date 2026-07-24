@@ -1,0 +1,10 @@
+.git
+.venv
+__pycache__
+*.pyc
+.DS_Store
+.env
+.pytest_cache
+.vscode
+Inflation ,Exchange rate predictor.docx
+tz_economic_predictor.ipynb
